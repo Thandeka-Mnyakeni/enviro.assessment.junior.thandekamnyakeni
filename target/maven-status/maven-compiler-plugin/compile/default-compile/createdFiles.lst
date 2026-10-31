@@ -1,0 +1,5 @@
+com\enviro\assessment\junior\thandeka\repository\InvestmentRepository.class
+com\enviro\assessment\junior\thandeka\service\InvestmentService.class
+com\enviro\assessment\junior\thandeka\controller\InvestmentController$WithdrawalRequest.class
+com\enviro\assessment\junior\thandeka\controller\InvestmentController.class
+com\enviro\assessment\junior\thandeka\EnviroApplication.class

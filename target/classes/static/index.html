@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Enviro365 | Investor Portal</title>
+<style>
+:root{font-family:Arial,sans-serif;color:#142f47;background:#f2f6fa}*{box-sizing:border-box}body{margin:0}header{background:#06365f;color:white;padding:24px max(5%,calc((100% - 1100px)/2));display:flex;justify-content:space-between;align-items:center;gap:16px}header strong{font-size:26px}header strong span{color:#f6d657}header small{color:#bbd8eb}.wrap{max-width:1100px;margin:auto;padding:36px 20px 60px}h1{font-size:30px;margin:0 0 8px}p{color:#647b90}.top{margin-bottom:28px}.overview{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.card,.panel{background:white;border:1px solid #e0e7ee;box-shadow:0 5px 18px #143c5c0a;border-radius:13px;padding:23px}.card small{color:#71869a;font-weight:600}.card h2{margin:15px 0 9px;font-size:27px;color:#06365f}.card p{margin:0;font-size:13px}.total{background:#06365f;color:white;border-radius:13px;padding:25px;margin-bottom:22px}.total small{color:#bedbea}.total strong{display:block;font-size:39px;margin-top:12px}.tabs{display:flex;gap:8px;margin:30px 0 20px;border-bottom:1px solid #d7e2eb;flex-wrap:wrap}.tabs button{border:0;border-bottom:3px solid transparent;background:transparent;padding:15px 18px;color:#5b7082;cursor:pointer;font-size:15px;font-weight:bold}.tabs button.active{color:#06365f;border-color:#e8bc34}.page{display:none}.page.active{display:block}.row{display:flex;gap:25px;align-items:start}.row>.panel{flex:1}.muted{font-size:14px;line-height:1.6}label{display:block;font-weight:bold;margin-top:18px;margin-bottom:8px;font-size:14px}input,select{width:100%;border:1px solid #bacbd9;border-radius:7px;padding:12px;font-size:15px;background:white;color:#173b55}button.primary{background:#06365f;border:0;color:white;padding:13px 20px;border-radius:7px;font-weight:bold;cursor:pointer}button.primary:hover{background:#125884}button:disabled{opacity:.55;cursor:wait}.hint{font-size:13px;color:#60768a;line-height:1.6}.rules li{margin:12px 0;color:#536f85}.feedback{display:none;margin:15px 0;padding:13px;border-radius:7px;line-height:1.4}.feedback.error{display:block;color:#8c2231;background:#fff0f2}.feedback.good{display:block;color:#175c41;background:#e8f9f0}table{border-collapse:collapse;width:100%;min-width:690px;text-align:left}th,td{padding:15px;border-bottom:1px solid #e2e8ef;font-size:14px}th{color:#607b92;font-size:12px}td{color:#26465d}.scroll{overflow:auto}.filters{display:flex;align-items:end;gap:12px;flex-wrap:wrap;margin-bottom:15px}.filters label{margin:0}.filters input{margin-top:7px}.subhead{display:flex;align-items:center;justify-content:space-between;gap:15px}footer{padding:24px;color:#8b9bad;text-align:center;font-size:12px}@media(max-width:760px){header{padding:20px}.overview{grid-template-columns:1fr}.row{flex-direction:column}.row>.panel{width:100%}.wrap{padding:24px 14px}.total strong{font-size:32px}h1{font-size:26px}}
+</style>
+</head>
+<body>
+<header><strong>Enviro365</strong>INVESTOR PORTAL</header>
+<div class="wrap">
+  <div class="top"><h1>Investor dashboard</h1><p id="welcome">Loading your investments...</p></div>
+  <section class="total"><small>TOTAL PORTFOLIO BALANCE</small><strong id="total">R —</strong></section>
+  <nav class="tabs"><button class="active" data-page="portfolio">Portfolio</button><button data-page="withdraw">Make withdrawal</button><button data-page="history">Withdrawal history</button></nav>
+  <section class="page active" id="portfolio"><h2>My investments</h2><div class="overview" id="products"></div></section>
+  <section class="page" id="withdraw">
+    <div class="row">
+      <div class="panel">
+        <h2>Withdrawal request</h2>
+        <p>Select an investment and enter the amount you want to withdraw.</p>
+        <div id="message" class="feedback" role="status"></div>
+        <form id="withdrawForm">
+          <label for="product">Investment product</label>
+          <select id="product" required></select>
+          <label for="amount">Amount (ZAR)</label>
+          <input id="amount" type="number" min="0.01" step="0.01" required placeholder="e.g. 1500.00">
+          <p class="hint" id="limit">Select a product to see its available balance.</p>
+          <button class="primary" id="send" type="submit">Submit withdrawal</button>
+        </form>
+      </div>
+    </div>
+  </section>
+  <section class="page" id="history"><div class="panel"><div class="subhead"><h2>Withdrawal history</h2></div>
+    <div class="filters">
+      <label>From <input type="date" id="from"></label>
+      <label>To <input type="date" id="to"></label>
+      <button class="primary" id="filter">Filter</button>
+      <button class="primary" id="download">Download CSV</button>
+    </div>
+    <div class="feedback" id="historyError" role="status"></div>
+    <div class="scroll"><table><thead><tr><th>REFERENCE</th><th>DATE</th><th>INVESTMENT</th><th>AMOUNT</th><th>BALANCE AFTER</th></tr></thead><tbody id="transactions"></tbody></table></div>
+  </div></section>
+</div>
+<footer>Enviro365 Investments — Junior Developer Assessment </footer>
+
+<script>
+const $ = id => document.getElementById(id);
+let investments = [];
+const money = value => new Intl.NumberFormat('en-ZA',{style:'currency',currency:'ZAR'}).format(value);
+
+function showMessage(id,text,error=false){
+  const el=$(id);el.textContent=text;el.className='feedback '+(error?'error':'good');
+}
+
+async function api(url,options){
+  const response=await fetch(url,options);let data;
+  try{
+    data=await response.json()
+  }catch{
+    throw Error('Could not reach the server.')
+  }if(!response.ok)throw Error(data.error||'Request failed.');
+  return data
+}
+
+function setPage(page){
+  document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('active',b.dataset.page===page));
+  document.querySelectorAll('.page').forEach(s=>s.classList.toggle('active',s.id===page));
+  if(page==='history')loadHistory()}
+  document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>setPage(b.dataset.page));
+
+async function loadPortfolio(){
+ try{
+   const data=await api('/api/portfolio');investments=data.products;
+   $('welcome').textContent='Welcome, '+data.name+' · Age '+data.age;
+   $('total').textContent=money(data.total);
+   $('products').replaceChildren();$('product').replaceChildren();
+   const initial=document.createElement('option');initial.value='';initial.textContent='Select an investment';$('product').append(initial);
+   for(const p of investments){
+    const card=document.createElement('article');card.className='card';
+    const small=document.createElement('small');small.textContent=p.NAME;
+    const balance=document.createElement('h2');balance.textContent=money(p.BALANCE);
+    const category=document.createElement('p');category.textContent=p.TYPE==='RETIREMENT'?'Retirement investment':'General investment';card.append(small,balance,category);$('products').append(card);
+    const option=document.createElement('option');option.value=p.ID;option.textContent=p.NAME;$('product').append(option);
+  }
+  updateLimit();
+}catch(err){
+  $('welcome').textContent=err.message;}
+}
+
+function updateLimit(){
+  const p=investments.find(item=>String(item.ID)===$('product').value);$('limit').textContent=p?'Available: '+money(p.BALANCE)+' · Maximum withdrawal (90%): '+money(Math.floor(Number(p.BALANCE)*90)/100):'Select a product to see its available balance.'}
+  $('product').onchange=updateLimit;
+  $('withdrawForm').onsubmit=async event=>{
+    event.preventDefault();
+    const id=Number($('product').value), amount=Number($('amount').value);
+    const p=investments.find(item=>item.ID===id);
+    if(!p||!Number.isFinite(amount)||amount<=0){
+      showMessage('message','Select a product and enter a positive amount.',true);
+      return;
+    }if(amount>Math.floor(Number(p.BALANCE)*90)/100){
+      showMessage('message','Amount exceeds 90% of the product balance.',true);
+      return;
+    }$('send').disabled=true;
+    try{
+      const result=await api('/api/withdrawals',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({productId:id,amount})});showMessage('message',result.message+' Reference: '+result.reference);$('amount').value='';await loadPortfolio();}catch(err){showMessage('message',err.message,true)}finally{$('send').disabled=false}
+    };
+
+function query(){const args=new URLSearchParams();
+  if($('from').value)args.set('from',$('from').value);
+  if($('to').value)args.set('to',$('to').value);
+  return args.toString()
+}
+
+async function loadHistory(){
+  try{
+    const rows=await api('/api/withdrawals?'+query());
+    $('transactions').replaceChildren();
+    $('historyError').className='feedback';
+    if(rows.length===0){
+      const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=5;td.textContent='No withdrawals found.';tr.append(td);$('transactions').append(tr)}
+      for(const row of rows){
+        const tr=document.createElement('tr');
+        for(const value of [row.REFERENCE,String(row.CREATED_AT).replace('T',' ').slice(0,19),row.PRODUCT_NAME,money(row.AMOUNT),money(row.BALANCE_AFTER)]){const td=document.createElement('td');td.textContent=value;tr.append(td)}$('transactions').append(tr)}
+      }catch(err){
+        showMessage('historyError',err.message,true)}}
+        $('filter').onclick=loadHistory;
+        $('download').onclick=()=>{if($('from').value&&$('to').value&&$('from').value>$('to').value){
+          showMessage('historyError','From date cannot be after to date.',true);
+          return
+        }window.location.href='/api/statement.csv?'+query()};
+        loadPortfolio();
+</script>
+</body>
+</html>

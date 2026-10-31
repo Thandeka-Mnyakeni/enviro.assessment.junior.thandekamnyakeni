@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-EnviroApplication<enviro365-simple>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.enviro.assessment.junior.thandeka.EnviroApplication",
+            "projectName": "enviro365-simple",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}

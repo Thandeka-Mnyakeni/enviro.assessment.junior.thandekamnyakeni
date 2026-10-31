@@ -35,3 +35,12 @@ REST API
 | GET | '/api/statement.csv?from=2026-01-01&to=2026-12-31' | CSV report |
 
 AI usage disclosure: ChatGPT assisted with implementation and UI.
+<img width="1365" height="684" alt="dashboard" src="https://github.com/user-attachments/assets/d380d5e6-5aed-46eb-b51f-d4b057bac1ad" />
+
+<img width="1352" height="689" alt="withdrawal" src="https://github.com/user-attachments/assets/f571604b-e259-4a70-ab90-75e4279993cd" />
+
+<img width="1349" height="640" alt="history" src="https://github.com/user-attachments/assets/277088bc-2f9b-47e3-8a62-105788e54da1" />
+
+
+
+
